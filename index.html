@@ -91,28 +91,12 @@ button:hover {
   animation: spin 1s linear infinite;
 }
 @keyframes spin { 100% { transform: rotate(360deg); } }
-
-/* ---------- MOBILE ---------- */
 @media (max-width: 600px) {
-  h1 {
-    font-size: 1.5rem;
-    margin: 20px 0 10px;
-  }
-  .container {
-    padding: 15px;
-    width: 88%;
-    gap: 6px;
-  }
-  input, button {
-    font-size: 12.5px;
-    padding: 8px;
-  }
-  button {
-    font-size: 13px;
-  }
-  #result {
-    font-size: 14px;
-  }
+  h1 { font-size: 1.5rem; margin: 20px 0 10px; }
+  .container { padding: 15px; width: 88%; gap: 6px; }
+  input, button { font-size: 12.5px; padding: 8px; }
+  button { font-size: 13px; }
+  #result { font-size: 14px; }
 }
 </style>
 </head>
@@ -155,9 +139,13 @@ const prizes = {
   "LF-B9M1T":"Leider verloren","LF-R2G8K":"5 CHF Rabatt"
 };
 
+// Discord Webhooks
 const webhookWinner = "https://discord.com/api/webhooks/1446073985589842012/b5jC1rr4ZYJwvGkbOgWjqSRcqxmx5hnLS5LRfrca8hc0ikKgWQ1A_zmLInLz1USksyTz";
 const webhookLoser  = "https://discord.com/api/webhooks/1446082624404586589/YEIVR-9aQlnzGcxNUGGML0VhWynsBOJd29sMLkx7lPusw7lpdejtT6ZH0oO47FjurS7I";
 const webhookRepeat = "https://discord.com/api/webhooks/1446082635725148254/2fW0kb-5drRzDCa5op-Hr3HwymXZVkcCOHj8Pq_3pVGDN_bH-IXFDko0oqyurUWDcMRS";
+
+// Dein Make Webhook (für Rabatt + E-Mail)
+const makeWebhook = "https://hook.eu1.make.com/cabwpbyntt4lixcofz7n5i63pgktm3fp";
 
 let usedCodes = JSON.parse(localStorage.getItem("usedCodes") || "[]");
 
@@ -236,6 +224,22 @@ function checkCode() {
       result.innerHTML = "<div style='font-size:26px; color:#ffffff; text-shadow:0 0 15px #ffd700;'>🎉 Herzlichen Glückwunsch!</div><div style='font-size:20px; color:#ffd700; margin-top:10px;'>Du hast gewonnen: <b>" + prize + "</b></div><br><div style='color:#ffffff;'>📩 Du wirst innerhalb von 24 Stunden per E-Mail kontaktiert.</div>";
       result.className = "win";
       sendToDiscord(webhookWinner, "🎉 Neuer Gewinner!", 16766720, email, order, code, prize);
+
+      // Automatisch an Make senden (Rabatt & E-Mail)
+      const discountType = prize.includes("%") ? "PERCENT" : (prize.includes("CHF") ? "ABS" : null);
+      const discountValue = prize.includes("%") ? 10 : (prize.includes("CHF") ? 5 : 0);
+
+      fetch(makeWebhook, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email,
+          code: code,
+          prize: prize,
+          discountType: discountType,
+          discountValue: discountValue
+        })
+      });
     }
   }, 1000);
 }
